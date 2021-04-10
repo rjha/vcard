@@ -17,8 +17,9 @@
     $previousPage = $page - 1;
     $previousPage = ($previousPage < 0) ? 0 : $previousPage;
 
-    $num_records = sizeof($result);
-    $i = 0;
+    $gparams = new \stdClass ;
+    $gparams->cards = $result;
+    
 
 
 ?>
@@ -38,14 +39,14 @@
         <h1> visiting cards database </h1>
     </header>
 
-    <?php for($i =0 ; $i < $num_records; $i++) { ?>
-
-    <div class="row">
-        <div class="col-sm-4"> <?php echo $result[$i]["name"]; ?></div>  
-        <div class="col-sm-4"><?php echo $result[$i]["email"]; ?></div>
+    <div id="cards">
+        <div class="row" v-for="card in cards">
+            <div class="col-sm-4"> {{card.name}} </div>  
+            <div class="col-sm-4"> {{card.email}} </div>
+        </div>
     </div>
 
-    <?php } ?>
+    
 
     <footer class="sticky">
         <a href="/index.php?page=<?php echo $previousPage; ?>">&lt;&nbsp;previous</a>
@@ -55,6 +56,20 @@
 
   </div>
 
+  <script src="https://unpkg.com/vue@next"></script>
+  <script>
+     var gparams = <?php echo json_encode($gparams, JSON_PRETTY_PRINT); ?>;
+
+    const Contact = {
+        data() {
+            return {
+                cards: gparams.cards
+            }
+        }
+    };
+
+    Vue.createApp(Contact).mount('#cards')
+    </script>
 
 </body>
 
