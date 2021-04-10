@@ -21,7 +21,7 @@ namespace com\yuktix\dao {
 
             $sql = "insert INTO card_master(name, email, created_on, updated_on) "
             ." VALUES(:name, :email, now(), now()) ON DUPLICATE KEY UPDATE version = version+1 " ;
-                
+
             $stmt = $this->dbh->prepare($sql);
             $stmt->bindParam(":name", $name, \PDO::PARAM_STR);
             $stmt->bindParam(":email", $email, \PDO::PARAM_STR);
@@ -30,6 +30,24 @@ namespace com\yuktix\dao {
             //end Tx
             $this->dbh->commit();
             return TRUE ;
+        }
+
+        function get($page) {
+
+            $this->dbh->beginTransaction();
+            // page size = 50 
+            $page_size = 50;
+            $start = $page * $page_size;
+            $sql = "select name, email from card_master order by email asc limit %d, %d " ;
+            $sql = sprintf($sql, $start, $page_size);
+
+            // print($sql);
+            $stmt = $this->dbh->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            // var_dump($result);
+            return $result;
+
         }
 
     }
