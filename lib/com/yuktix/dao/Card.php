@@ -9,9 +9,11 @@ namespace com\yuktix\dao {
     class Card {
 
         private $dbh ;
+        private $page_size;
 
         function __construct() {
             $this->dbh = PDOWrapper::getHandle();
+            $this->page_size = 50;
         }
 
         function store($name, $email) {
@@ -47,17 +49,27 @@ namespace com\yuktix\dao {
 
         function get($page) {
 
-            $this->dbh->beginTransaction();
-            // page size = 50 
-            $page_size = 50;
-            $start = $page * $page_size;
+            $start = $page * $this->page_size;
             $sql = "select name, email from card_master order by email asc limit %d, %d " ;
-            $sql = sprintf($sql, $start, $page_size);
+            $sql = sprintf($sql, $start, $this->page_size);
 
             $stmt = $this->dbh->prepare($sql);
             $stmt->execute();
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             return $result;
+
+        }
+
+        function getNumberOfPages() {
+
+            $sql = "select count(id) as total from card_master" ;
+            $stmt = $this->dbh->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $total = intval($result["total"]);
+            
+            $num_pages = ceil($total / $this->page_size);
+            return $num_pages;
 
         }
 

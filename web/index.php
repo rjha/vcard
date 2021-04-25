@@ -12,7 +12,7 @@
     $page = (empty($page)) ? 0 : $page;
     $dao = new CardDao();
     $result = $dao->get($page);
-
+    
     $nextPage = $page + 1;
     $previousPage = $page - 1;
     $previousPage = ($previousPage < 0) ? 0 : $previousPage;
@@ -20,7 +20,7 @@
     $gparams = new \stdClass ;
     $gparams->cards = $result;
     $gparams->base = Url::base();
-    
+    $gparams->numberOfPages = $dao->getNumberOfPages();
 
 
 ?>
@@ -89,7 +89,7 @@
                 &nbsp;
                 <a href="/index.php?page=<?php echo $nextPage; ?>">next&nbsp;&gt;</a>
                 &nbsp;
-                <input v-model="page"/> &#47; 50
+                <input v-model="page"/> &#47; {{numberOfPages}}
                 <a href="#" v-on:click="gotoPage($event)"> jump</a> 
             </div>
             <div class="col-sm-4"> 
@@ -121,6 +121,7 @@
         data() {
             return {
                 cards: gparams.cards,
+                numberOfPages: gparams.numberOfPages,
                 trash: [],
                 page : 1
             }
@@ -137,7 +138,7 @@
 
                 console.log("jump to page ->  %O", pageNum);
                 window.location.href = gparams.base + "/index.php?page=" + pageNum;
-                
+
             },
 
             trashCard(event, card) {
