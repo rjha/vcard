@@ -16,19 +16,44 @@ namespace com\yuktix\dao {
             $this->page_size = 50;
         }
 
-        function store($name, $email) {
+        function store($cardObj) {
 
             try {
+
+                if(!property_exists($cardObj, "source")) {
+                    throw new APIException(400, "source is required");
+                }
+
+                if(!property_exists($cardObj, "name")) {
+                    throw new APIException(400, "name is required");
+                }
+
+                if(!property_exists($cardObj, "email")) {
+                    throw new APIException(400, "email is required");
+                }
+                
+                $cc = property_exists($cardObj, "cc") ? $cardObj->cc : 0;
+                $phone = property_exists($cardObj, "cc") ? $cardObj->phone : "--" ;
+
+                // @todo 
+                // email in trash list?
 
                 // start Tx
                 $this->dbh->beginTransaction();
 
-                $sql = "insert INTO card_master(name, email, created_on, updated_on) "
-                ." VALUES(:name, :email, now(), now()) ON DUPLICATE KEY UPDATE version = version+1 " ;
+                $sql = "insert INTO card_master(source, name, email, "
+                ." country_code, phone, created_on, updated_on) "
+                ." VALUES(:source, :name, :email, :cc, :phone, now(), now()) "
+                ." ON DUPLICATE KEY UPDATE name = VALUES(name), phone = VALUES(phone), "
+                ." country_code = VALUES(country_code), source = VALUES(source), "
+                ." version = version+1 " ;
 
                 $stmt = $this->dbh->prepare($sql);
-                $stmt->bindParam(":name", $name, \PDO::PARAM_STR);
-                $stmt->bindParam(":email", $email, \PDO::PARAM_STR);
+                $stmt->bindParam(":name", $cardObj->name, \PDO::PARAM_STR);
+                $stmt->bindParam(":email", $cardObj->email, \PDO::PARAM_STR);
+                $stmt->bindParam(":source", $cardObj->source, \PDO::PARAM_STR);
+                $stmt->bindParam(":cc", $cc, \PDO::PARAM_INT);
+                $stmt->bindParam(":phone", $cardObj->phone, \PDO::PARAM_STR);
                 $stmt->execute();
 
                 //end Tx
@@ -50,7 +75,8 @@ namespace com\yuktix\dao {
         function get($page) {
 
             $start = $page * $this->page_size;
-            $sql = "select name, email from card_master order by email asc limit %d, %d " ;
+            $sql = "select name, email from card_master "
+            ." order by email asc limit %d, %d " ;
             $sql = sprintf($sql, $start, $this->page_size);
 
             $stmt = $this->dbh->prepare($sql);
@@ -111,6 +137,23 @@ namespace com\yuktix\dao {
 
         }
 
+        function checkInTrash($email) {
+
+            $flag = 0;
+            $sql = "select id from card_trash where email = :email" ;
+
+            $stmt = $this->dbh->prepare($sql);
+            $stmt->bindParam(":email", $email, \PDO::PARAM_STR);
+            $stmt->execute();
+
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if($result) {
+                $flag = 1 ;
+            }
+           
+            return $flag;
+
+        }
 
     }
 }

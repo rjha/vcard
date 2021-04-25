@@ -11,27 +11,21 @@
 	set_exception_handler('webgloo_ajax_exception_handler');
 	$responseObj = new \stdClass;
 
-	$postData = file_get_contents("php://input");
-	$cardObj = json_decode($postData);
-	
-    if(!$cardObj) {
-        throw new APIException(400, "no card object found");
-    }
-
-    $dao = new CardDao();
-
-	if($dao->checkInTrash($cardObj->email) == 1) {
-
-		$responseObj->message = "email is in trash";
-		$responseObj->code = 409;
-
-	} else {
-		$dao->store($cardObj);
-		$responseObj->message = "success";
-		$responseObj->code = 200;
+	$email = array_key_exists("email", $_GET) ? $_GET["email"] : NULL;
+	if(empty($email)) {
+		throw new APIException(400, "email not found");
 	}
 
-	// standard JSON response
+    $dao = new CardDao();
+    $flag = $dao->checkInTrash($email);
+
+	if($flag == 1) {
+		 "found in trash";
+	} else {
+
+	}
+	$responseObj->message = ($flag == 1) ? "found in trash" : "not found in trash" ;
+    $responseObj->code = ($flag == 1) ? 200 : 404;
 	echo json_encode($responseObj);
 
 ?>
