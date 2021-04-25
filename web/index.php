@@ -84,11 +84,11 @@
                 <a href="/index.php?page=<?php echo $nextPage; ?>">next&nbsp;&gt;</a>
             </div>
             <div class="col-sm-6"> 
-                <span> Trash {{trash.length}}</span>
+                <span> Trash &nbsp; {{trash.length}}</span>
             </div>
 
             <div class="col-sm-2"> 
-                <a href="#">submit</a>
+                <a href="#" v-on:click="submit($event)">submit</a>
             </div>
 
         </div>
@@ -98,12 +98,16 @@
 
   </div>
 
-  <script src="https://unpkg.com/vue@next"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="http://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
   <script>
     
     var gparams = <?php echo json_encode($gparams, JSON_PRETTY_PRINT); ?>;
     
-    const Contact = {
+    var app = new Vue({
+        el: "#container",
         data() {
             return {
                 cards: gparams.cards,
@@ -142,14 +146,48 @@
                     let restored = this.trash.splice(index, 1);
                     console.log("restore from trash: %O", restored);
                 }
+            },
+            
+            submit(event) {
+                console.log("flush to server %O", this.trash);
+                // let data = new FormData();
 
+                // get all emails to be trashed
+                let emails = [];
+                let i = 0;
+                for(i =0; i < this.trash.length; i++) {
+                    emails.push(this.trash[i].email);
+                }
+                
+                // data.append("emails", emails);
+                let data = {
+                    "emails": emails
+                }
+                
+                let url = "http://localhost:8081/api/trash.php";
+                let config = {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
 
-            }
+                axios.post(url, data, config).then(function(response){
 
+                    var status = response.status || 500 ;
+                    var data = response.data || {} ;
+                    console.log("server response: %O", data);
+                    console.log('UPLOAD SUCCESS!!');
+
+                }).catch(function(error){
+                    console.log('UPLOAD FAILURE!!');
+                    console.log(error.response.data);
+                    console.log(error.response);
+                });
+
+            } //:submitFile
         }
-    };
+    });
 
-    Vue.createApp(Contact).mount('#container')
     </script>
 
 </body>
