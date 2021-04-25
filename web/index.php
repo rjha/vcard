@@ -19,6 +19,7 @@
 
     $gparams = new \stdClass ;
     $gparams->cards = $result;
+    $gparams->base = Url::base();
     
 
 
@@ -39,6 +40,11 @@
             margin-bottom: 30px;
             background: azure;
         }
+
+        input {
+            width: 71px;
+        }
+        
         .strike {
             background-color: bisque;
         }
@@ -78,12 +84,15 @@
     <footer class="sticky">
         
         <div class="row">
-            <div class="col-sm-4"> 
+            <div class="col-sm-6" id="navigation"> 
                 <a href="/index.php?page=<?php echo $previousPage; ?>">&lt;&nbsp;previous</a>
-                &nbsp;&nbsp;
+                &nbsp;
                 <a href="/index.php?page=<?php echo $nextPage; ?>">next&nbsp;&gt;</a>
+                &nbsp;
+                <input v-model="page"/> &#47; 50
+                <a href="#" v-on:click="gotoPage($event)"> jump</a> 
             </div>
-            <div class="col-sm-6"> 
+            <div class="col-sm-4"> 
                 <span> Trash &nbsp; {{trash.length}}</span>
             </div>
 
@@ -92,6 +101,7 @@
             </div>
 
         </div>
+        
 
         
     </footer>
@@ -111,10 +121,25 @@
         data() {
             return {
                 cards: gparams.cards,
-                trash: []
+                trash: [],
+                page : 1
             }
         },
+
         methods: {
+
+            gotoPage(event) {
+
+                var pageNum = parseInt(this.page, 10);
+                if (isNaN(pageNum)) { 
+                    pageNum =  0; 
+                }
+
+                console.log("jump to page ->  %O", pageNum);
+                window.location.href = gparams.base + "/index.php?page=" + pageNum;
+                
+            },
+
             trashCard(event, card) {
                 // This is to ensure that link
                 // stays in the same place 
@@ -149,9 +174,7 @@
             },
             
             submit(event) {
-                console.log("flush to server %O", this.trash);
-                // let data = new FormData();
-
+                
                 // get all emails to be trashed
                 let emails = [];
                 let i = 0;
@@ -159,12 +182,13 @@
                     emails.push(this.trash[i].email);
                 }
                 
-                // data.append("emails", emails);
+                console.log("flush to server -> %O", emails);
+
                 let data = {
                     "emails": emails
                 }
-                
-                let url = "http://localhost:8081/api/trash.php";
+
+                let url = gparams.base + "/api/trash.php";
                 let config = {
                     headers: {
                         'Content-Type': 'application/json'
@@ -176,10 +200,10 @@
                     var status = response.status || 500 ;
                     var data = response.data || {} ;
                     console.log("server response: %O", data);
-                    console.log('UPLOAD SUCCESS!!');
+                    console.log("page submit() completed");
 
                 }).catch(function(error){
-                    console.log('UPLOAD FAILURE!!');
+                    console.log("page submit() error");
                     console.log(error.response.data);
                     console.log(error.response);
                 });
