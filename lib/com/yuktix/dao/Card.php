@@ -13,7 +13,7 @@ namespace com\yuktix\dao {
 
         function __construct() {
             $this->dbh = PDOWrapper::getHandle();
-            $this->page_size = 50;
+            $this->page_size = 100;
         }
 
         function store($cardObj) {
