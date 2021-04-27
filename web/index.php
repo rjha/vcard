@@ -12,7 +12,7 @@
     $page = (empty($page)) ? 0 : $page;
     $dao = new CardDao();
     $result = $dao->get($page);
-    
+
     $nextPage = $page + 1;
     $previousPage = $page - 1;
     $previousPage = ($previousPage < 0) ? 0 : $previousPage;
@@ -32,8 +32,12 @@
     
     <style>
 
-        header {
+        .text-center {
             text-align: center;
+        }
+
+        .align-right {
+            float: right;
         }
 
         #message {
@@ -41,13 +45,35 @@
             background: azure;
         }
 
-        input {
+        .pagination-input {
             width: 71px;
         }
         
         .strike {
             background-color: bisque;
         }
+
+        div.sticky-element {
+            position: -webkit-sticky;
+            position: sticky;
+            z-index: 1000;
+        }
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        .mt-25 {
+            margin-top: 25px;
+        }
+
+        .top-height-56 {
+            top: 56px;
+        }
+
+        .top-height-80 {
+            top: 80px;
+        }
+
 
     </style>
 
@@ -57,53 +83,88 @@
 
 
 <div class="container" id="container">
-    <header class="sticky">
+    <header class="sticky text-center">
         <h1> visiting cards database </h1>
     </header>
-
-    <div id="message"> 
+    <div class="sticky-element top-height-56" id="message">
         <div class="row">
             <span> &nbsp; </span>
         </div>
     </div>
-
-    <div id="cards">
-        
-        <div class="row" v-for="card in cards" v-bind:class="{strike: card.trash}">
-            <div class="col-sm-4"> {{card.name}} </div>  
-            <div class="col-sm-4"> {{card.email}} </div>
-            <div class="col-sm-4"> 
-                <span v-if="!card.trash"><a href="#" v-on:click="trashCard($event, card)">Trash</a> </span>
-                <span v-if="card.trash"><a href="#" v-on:click="restoreCard($event, card)">Restore</a> </span>
+    <div class="row sticky-element top-height-80 mb-20" style="border-bottom: .0625rem solid var(--header-border-color);">
+        <div class="col-md-8">
+            <header style="border-bottom:0px;">
+                <a href="#"  v-on:click="switchTabs('masterTab')" v-bind:class="{ bordered: masterTab }" class="button">Master</a>
+                <a href="#" v-on:click="switchTabs('trashTab')" v-bind:class="{ bordered: trashTab }" class="button">Trash</a>
+            </header>
+        </div>
+        <div class="col-md-4" style="background: var(--header-back-color);">
+            <div class="input-group align-right">
+                <input type="text" id="search" placeholder="Search"/>
+                <button class="small primary">Search</button>
             </div>
         </div>
     </div>
-
-    
-
+    <div class="row">
+        <div class="col-md-12" v-show="masterTab">
+            <div class="text-center" v-show="cards.length == 0">
+                <h2>No data found.</h2>
+            </div>
+            <div id="cards" v-show="cards.length > 0">
+                <div class="row" v-for="card in cards" v-bind:class="{strike: card.trash}">
+                    <div class="col-sm-4"> {{card.name}} </div>
+                    <div class="col-sm-4"> {{card.email}} </div>
+                    <div class="col-sm-4">
+                        <span v-if="!card.trash"><a href="#" v-on:click="trashCard($event, card)">Trash</a> </span>
+                        <span v-if="card.trash"><a href="#" v-on:click="restoreCard($event, card)">Restore</a> </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12" v-show="trashTab">
+            <div class="text-center" v-show="trash.length == 0">
+                <h2>No data found.</h2>
+            </div>
+            <div class="row" v-show="trash.length > 0" v-for="card in trash">
+                <div class="col-sm-4"> {{card.name}} </div>
+                <div class="col-sm-4"> {{card.email}} </div>
+                <div class="col-sm-4">
+                    <span v-if="card.trash"><a href="#" v-on:click="restoreCard($event, card)">Restore</a> </span>
+                </div>
+            </div>
+        </div>
+    </div>
     <footer class="sticky">
-        
+
         <div class="row">
-            <div class="col-sm-6" id="navigation"> 
-                <a href="/index.php?page=<?php echo $previousPage; ?>">&lt;&nbsp;previous</a>
-                &nbsp;
-                <a href="/index.php?page=<?php echo $nextPage; ?>">next&nbsp;&gt;</a>
-                &nbsp;
-                <input v-model="page"/> &#47; {{numberOfPages}}
-                <a href="#" v-on:click="gotoPage($event)"> jump</a> 
+            <div class="col-sm-4" id="navigation">
+                <p class="doc">
+                    <a href="/index.php?page=<?php echo $previousPage; ?>" class="doc">&lt;&nbsp;previous</a>
+                    &nbsp;
+                    <a href="/index.php?page=<?php echo $nextPage; ?>" class="doc">next&nbsp;&gt;</a>
+                    &nbsp;
+                    <input class="pagination-input" v-model="page"/> &#47; {{numberOfPages}}
+                    <a href="#" v-on:click="gotoPage($event)" class="doc"> jump</a>
+                </p>
             </div>
-            <div class="col-sm-4"> 
-                <span> Trash &nbsp; {{trash.length}}</span>
+            <div class="col-sm-4 text-center">
+                <p class="doc mt-25">
+                    <span class="doc">Trash &nbsp; {{trash.length}}</span>
+                </p>
             </div>
 
-            <div class="col-sm-2"> 
-                <a href="#" v-on:click="submit($event)">submit</a>
+            <div class="col-sm-4">
+                <div class="align-right">
+                    <p class="doc mt-25">
+                        <a href="#" v-on:click="submit($event)" class="doc">Submit</a>
+                        &nbsp;|&nbsp;
+                        <a href="#" class="doc">Cancel</a>
+                    </p>
+                </div>
             </div>
 
         </div>
-        
 
-        
     </footer>
 
   </div>
@@ -118,12 +179,17 @@
     
     var app = new Vue({
         el: "#container",
+        created () {
+            this.switchTabs("masterTab");
+        },
         data() {
             return {
                 cards: gparams.cards,
                 numberOfPages: gparams.numberOfPages,
                 trash: [],
-                page : 1
+                page : 1,
+                masterTab: true,
+                trashTab: false
             }
         },
 
@@ -148,6 +214,7 @@
                 this.trash.push(card);
                 card.trash = true;
                 console.log("clicked %s, trash size %O", card.email, this.trash.length);
+                console.log("trash list", this.trash);
                 
             },
 
@@ -209,7 +276,16 @@
                     console.log(error.response);
                 });
 
-            } //:submitFile
+            }, //:submitFile
+            switchTabs(tab) {
+                if (tab === 'masterTab') {
+                    this.trashTab = false;
+                    this.masterTab = true;
+                } else {
+                    this.trashTab = true;
+                    this.masterTab = false;
+                }
+            }
         }
     });
 
