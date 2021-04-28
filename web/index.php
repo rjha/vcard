@@ -15,7 +15,15 @@
     $page = (empty($page)) ? 0 : $page;
 
     $dao = new CardDao();
-    $result = $dao->get($page);
+    
+    if($tab == 'main') {
+        $result = $dao->getMainItems($page);
+    } else if ($tab == 'trash') {
+        $result = $dao->getTrashItems($page);
+    } else {
+        echo "unknown database name" ;
+        exit(1);
+    }
 
     $gparams = new \stdClass;
     $gparams->base = Url::base();
@@ -91,7 +99,7 @@
 
             <div class="col-md-4">
                 <div class="tabnav">
-                    <a href="index.php?tab=main" v-bind:class="{active: display.tab == 'main'}" >master</a>
+                    <a href="index.php?tab=main" v-bind:class="{active: display.tab == 'main'}" >main</a>
                     <a href="index.php?tab=trash" v-bind:class="{active: display.tab == 'trash'}">trash</a>
                 </div>
             </div>
@@ -125,7 +133,7 @@
     </div> <!-- main -->
 
     <div v-show="display.tab == 'trash' ">
-    
+
         <div class="row" v-for="card in cards">
             <div class="col-sm-4"> {{card.name}} </div>
             <div class="col-sm-4"> {{card.email}} </div>
@@ -274,17 +282,20 @@
             
             submit(event) {
                 
-                // get all emails to be trashed
-                let emails = [];
+                // get all cards to be trashed
+                let items = [];
                 let i = 0;
                 for(i =0; i < this.trash.length; i++) {
-                    emails.push(this.trash[i].email);
+                    items.push({
+                        "name": this.trash[i].name,
+                        "email": this.trash[i].email
+                    });
                 }
                 
-                console.log("flush to server -> %O", emails);
+                console.log("send trash to server -> %O", items);
 
                 let data = {
-                    "emails": emails
+                    "items": items
                 }
 
                 let url = gparams.base + "/api/trash.php";
@@ -297,16 +308,21 @@
                 axios.post(url, data, config).then( response => {
 
                     var status = response.status || 500 ;
-                    var data = response.data || {} ;
-                    this.page.message = data.message;
+                    var data = response.data || {};
+                    this.page.message = data.message || data.error ;
                     console.log("server response: %O", data);
+
+                    // data.error 
+                    // data.code 
                     console.log("page submit() completed");
 
                 }).catch( error => {
-                    this.page.message = "error happened. please check logs";
+
+                    this.page.message = "unknown error happened" ;
                     console.log("page submit() error");
                     console.log(error.response.data);
                     console.log(error.response);
+
                 });
 
             }
