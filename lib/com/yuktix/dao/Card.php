@@ -5,6 +5,7 @@ namespace com\yuktix\dao {
     use \com\indigloo\Configuration as Config;
     use \com\indigloo\mysql\PDOWrapper;
     use \com\indigloo\Logger as Logger;
+    use com\indigloo\exception\DBException as DBException;
 
     class Card {
 
@@ -60,23 +61,37 @@ namespace com\yuktix\dao {
                 $this->dbh->commit();
 
             } catch (\PDOException $e) {
-                $dbh->rollBack();
-                $dbh = null;
+                $this->dbh->rollBack();
+                $this->dbh = null;
                 throw new DBException($e->getMessage(), $e->getCode());
 
             } catch(\Exception $ex) {
-                $dbh->rollBack();
-                $dbh = null;
+                $this->dbh->rollBack();
+                $this->dbh = null;
                 throw new DBException($ex->getMessage(), $ex->getCode());
             }
             
         }
 
-        function get($page) {
+        function getMainItems($page) {
 
             $start = $page * $this->page_size;
             $sql = "select name, email from card_master "
             ." order by email asc limit %d, %d " ;
+            $sql = sprintf($sql, $start, $this->page_size);
+
+            $stmt = $this->dbh->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $result;
+
+        }
+
+        function getTrashItems($page) {
+
+            $start = $page * $this->page_size;
+            $sql = "select name, email from card_trash "
+            ." order by created_on desc limit %d, %d " ;
             $sql = sprintf($sql, $start, $this->page_size);
 
             $stmt = $this->dbh->prepare($sql);
@@ -99,24 +114,25 @@ namespace com\yuktix\dao {
 
         }
 
-        function trash($emails) {
+        function trash($items) {
 
             try { 
                 // start Tx
                 $this->dbh->beginTransaction();
-                $sql1 = "insert INTO card_trash(email, created_on, updated_on) "
-                ." VALUES(:email, now(), now()) ON DUPLICATE KEY UPDATE version = version+1 ";
+                $sql1 = "insert INTO card_trash(name, email, created_on, updated_on) "
+                ." VALUES(:name, :email, now(), now()) ON DUPLICATE KEY UPDATE version = version+1 ";
 
                 $sql2 = "delete from card_master where email  = :email ";
                 $stmt1 = $this->dbh->prepare($sql1);
                 $stmt2 = $this->dbh->prepare($sql2);
 
-                foreach($emails as $email) {
+                foreach($items as $item) {
 
-                    $stmt1->bindParam(":email", $email, \PDO::PARAM_STR);
+                    $stmt1->bindParam(":email", $item->email, \PDO::PARAM_STR);
+                    $stmt1->bindParam(":name", $item->name, \PDO::PARAM_STR);
                     $stmt1->execute();
 
-                    $stmt2->bindParam(":email", $email, \PDO::PARAM_STR);
+                    $stmt2->bindParam(":email", $item->email, \PDO::PARAM_STR);
                     $stmt2->execute();
 
                 }
@@ -125,13 +141,13 @@ namespace com\yuktix\dao {
                 $this->dbh->commit();
 
             } catch (\PDOException $e) {
-                $dbh->rollBack();
-                $dbh = null;
+                $this->dbh->rollBack();
+                $this->dbh = null;
                 throw new DBException($e->getMessage(), $e->getCode());
 
             } catch(\Exception $ex) {
-                $dbh->rollBack();
-                $dbh = null;
+                $this->dbh->rollBack();
+                $this->dbh = null;
                 throw new DBException($ex->getMessage(), $ex->getCode());
             }
 
