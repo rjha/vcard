@@ -137,9 +137,7 @@
         <div class="row" v-for="card in cards">
             <div class="col-sm-4"> {{card.name}} </div>
             <div class="col-sm-4"> {{card.email}} </div>
-            <div class="col-sm-4">
-                &nbsp;
-            </div>
+            <div class="col-sm-4"> &nbsp;</div>
         </div>
        
     </div>  <!-- trash -->
@@ -161,10 +159,7 @@
             </div>
 
             <div class="col-sm-4">
-                <a href="#" class="doc">download</a>
-                &nbsp;|&nbsp;
-                <a href="#" class="doc">cancel</a>
-                &nbsp;|&nbsp;
+                <a href="#" class="doc">download</a>&nbsp;|&nbsp;
                 <a href="#" v-on:click="submit($event)">submit</a>
             </div>
 
