@@ -8,18 +8,21 @@
 	use \com\yuktix\dao\Card as CardDao;
     use \com\indigloo\exception\APIException as APIException;
 
+    $tab = Url::tryQueryParam("tab");
+    $tab = (empty($tab)) ? "main" : $tab;
+
     $page = Url::tryQueryParam("page");
     $page = (empty($page)) ? 0 : $page;
+
     $dao = new CardDao();
     $result = $dao->get($page);
 
-    $nextPage = $page + 1;
-    $previousPage = $page - 1;
-    $previousPage = ($previousPage < 0) ? 0 : $previousPage;
-
-    $gparams = new \stdClass ;
-    $gparams->cards = $result;
+    $gparams = new \stdClass;
     $gparams->base = Url::base();
+    $gparams->tab = $tab;
+    $gparams->pageNumber = $page;
+
+    $gparams->cards = $result;
     $gparams->numberOfPages = $dao->getNumberOfPages();
 
 
@@ -67,6 +70,9 @@
             padding: 11px; 
         }
 
+        .tabnav a.active {
+            border-bottom: 3px solid #1976D2;
+        }
       
 
     </style>
@@ -85,8 +91,8 @@
 
             <div class="col-md-4">
                 <div class="tabnav">
-                    <a href="#"  v-on:click="switchTabs('masterTab')" v-bind:class="{ active: masterTab }" >master</a>
-                    <a href="#" v-on:click="switchTabs('trashTab')" v-bind:class="{ active: trashTab }">trash</a>
+                    <a href="index.php?tab=main" v-bind:class="{active: display.tab == 'main'}" >master</a>
+                    <a href="index.php?tab=trash" v-bind:class="{active: display.tab == 'trash'}">trash</a>
                 </div>
             </div>
             
@@ -99,52 +105,46 @@
         </div>
         <div class="row">
             <div id="page-message" class="col-md-12">
-                <span v-show="pageMessage" v-text="pageMessage">&nbsp;</span>
-                ...&nbsp;
+                <span v-text="page.message">&nbsp;</span>
             </div>
 
         </div>
     </header>
 
 
-    <div class="row">
-        <div class="col-md-12" v-show="masterTab">
-            <div class="text-center" v-show="cards.length == 0">
-                <h2>No data found.</h2>
-            </div>
-            <div id="cards" v-show="cards.length > 0">
-                <div class="row" v-for="card in cards" v-bind:class="{strike: card.trash}">
-                    <div class="col-sm-4"> {{card.name}} </div>
-                    <div class="col-sm-4"> {{card.email}} </div>
-                    <div class="col-sm-4">
-                        <span v-if="!card.trash"><a href="#" v-on:click="trashCard($event, card)">Trash</a> </span>
-                        <span v-if="card.trash"><a href="#" v-on:click="restoreCard($event, card)">Restore</a> </span>
-                    </div>
-                </div>
+   
+    <div id="cards" v-show="display.tab == 'main' ">
+        <div class="row" v-for="card in cards" v-bind:class="{strike: card.trash}">
+            <div class="col-sm-4"> {{card.name}} </div>
+            <div class="col-sm-4"> {{card.email}} </div>
+            <div class="col-sm-4">
+                <span v-if="!card.trash"><a href="#" v-on:click="trashCard($event, card)">Trash</a> </span>
+                <span v-if="card.trash"><a href="#" v-on:click="restoreCard($event, card)">Restore</a> </span>
             </div>
         </div>
-        <div class="col-md-12" v-show="trashTab">
-            <div class="text-center" v-show="trash.length == 0">
-                <h2>No data found.</h2>
-            </div>
-            <div class="row" v-show="trash.length > 0" v-for="card in trash">
-                <div class="col-sm-4"> {{card.name}} </div>
-                <div class="col-sm-4"> {{card.email}} </div>
-                <div class="col-sm-4">
-                    <span v-if="card.trash"><a href="#" v-on:click="restoreCard($event, card)">Restore</a> </span>
-                </div>
+    </div> <!-- main -->
+
+    <div v-show="display.tab == 'trash' ">
+    
+        <div class="row" v-for="card in cards">
+            <div class="col-sm-4"> {{card.name}} </div>
+            <div class="col-sm-4"> {{card.email}} </div>
+            <div class="col-sm-4">
+                &nbsp;
             </div>
         </div>
-    </div>
+       
+    </div>  <!-- trash -->
+
     <footer class="sticky">
 
         <div class="row">
             <div class="col-sm-4" id="navigation">
-                <a href="/index.php?page=<?php echo $previousPage; ?>">&lt;&nbsp;previous</a>
+                <a href="#" v-on:click="gotoPreviousPage($event)">&nbsp;previous</a>
                 &nbsp;
-                <a href="/index.php?page=<?php echo $nextPage; ?>">next&nbsp;&gt;</a>
+                <a href="#" v-on:click="gotoNextPage($event)">next&nbsp;</a>
                 &nbsp;
-                <input v-model="page"/> &#47; {{numberOfPages}}
+                <input v-model="box.jump"/> &#47; {{page.total}}
                 <a href="#" v-on:click="gotoPage($event)"> jump</a>
             </div>
 
@@ -175,24 +175,61 @@
     var gparams = <?php echo json_encode($gparams, JSON_PRETTY_PRINT); ?>;
     
     var app = new Vue({
+
         el: "#container",
-        created () {
-            this.switchTabs("masterTab");
-        },
+        
         data() {
             return {
                 cards: gparams.cards,
-                numberOfPages: gparams.numberOfPages,
                 trash: [],
-                page : 1
+                page : {
+                    "number": gparams.pageNumber,
+                    "message": "...",
+                    "total": gparams.numberOfPages
+                },
+                display: {
+                    "tab": gparams.tab 
+                },
+                box: {
+                    "jump": gparams.pageNumber
+                }
             }
         },
 
         methods: {
 
+            gotoPreviousPage(event) {
+
+                var pageNum = parseInt(this.page.number, 10);
+                if (isNaN(pageNum)) { 
+                    pageNum =  0; 
+                } else {
+                    pageNum = pageNum - 1;
+                }
+
+                pageNum = (pageNum < 0) ? 0: pageNum;
+                console.log("jump to page ->  %O", pageNum);
+                window.location.href = gparams.base + "/index.php?page=" + pageNum;
+
+            },
+
+            gotoNextPage(event) {
+
+                var pageNum = parseInt(this.page.number, 10);
+                if (isNaN(pageNum)) { 
+                    pageNum =  0; 
+                } else {
+                    pageNum = pageNum + 1;
+                }
+
+                pageNum = (pageNum > this.page.total) ? this.page.total : pageNum;
+                console.log("jump to page ->  %O", pageNum);
+                window.location.href = gparams.base + "/index.php?page=" + pageNum;
+
+            },
             gotoPage(event) {
 
-                var pageNum = parseInt(this.page, 10);
+                var pageNum = parseInt(this.box.jump, 10);
                 if (isNaN(pageNum)) { 
                     pageNum =  0; 
                 }
@@ -261,19 +298,19 @@
 
                     var status = response.status || 500 ;
                     var data = response.data || {} ;
-
-                    this.pageMessage = data.message;
+                    this.page.message = data.message;
                     console.log("server response: %O", data);
                     console.log("page submit() completed");
 
                 }).catch( error => {
+                    this.page.message = "error happened. please check logs";
                     console.log("page submit() error");
                     console.log(error.response.data);
                     console.log(error.response);
                 });
 
             }
-            
+
         }
     });
 
