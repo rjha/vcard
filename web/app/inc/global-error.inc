@@ -39,31 +39,26 @@
 	
 	function webgloo_ajax_exception_handler($ex) {
 	    
-	    if($ex instanceof \com\indigloo\exception\APIException) {
-            
-	    	// get first message
-		    $message = $ex->getMessage();
-			$code = $ex->getCode();
+		$code = $ex->getCode();
+		$message = $ex->getMessage();
 
-	        $response = array(
-                "code" => $code, 
-                "error" => $message);
-            echo  json_encode($response);
-            
-	    } else {
-            
-	    	$message = $ex->getMessage();
-	    	$log_message = sprintf("%s:%d %s \n", $ex->getFile(), $ex->getLine(), $message);
-	    	\com\indigloo\Logger::getInstance()->error($log_message);
-	    	\com\indigloo\Logger::getInstance()->backtrace($ex->getTrace());
-	    	
-	    	$response = array(
-                "code" => 500, 
-                "error" => "Internal server error");
-            echo  json_encode($response);
-	    }
-	    
-	    exit(1) ;
+		$log_message = sprintf("%s:%d %s \n", $ex->getFile(), $ex->getLine(), $message);
+	    \com\indigloo\Logger::getInstance()->error($log_message);
+	    \com\indigloo\Logger::getInstance()->backtrace($ex->getTrace());
+		
+		// translate database and other errors 
+		if($ex instanceof \com\indigloo\exception\DBException) {
+			$message = "database error happened" ;
+		} else if ($ex instanceof \com\indigloo\exception\APIException){
+			$message = $ex->getMessage();
+		} else {
+			$message = "unknown server error happened";
+		}
+		
+		$response = array("code" => $code, "error" => $message);
+        echo  json_encode($response);
+	    exit(1);
+
 	}
 	
 	// set default error handler. Without error_types mask our error_handler will be called 
