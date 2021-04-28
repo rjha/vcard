@@ -17,7 +17,7 @@
 	$postObj = json_decode($postData);
 	
 	$dao = new CardDao();
-    $dao->trash($postObj->emails);
+    $dao->trash($postObj->items);
 	
 	// standard JSON response 
     $responseObj->code = 200;
