@@ -15,11 +15,15 @@
     $page = (empty($page)) ? 0 : $page;
 
     $dao = new CardDao();
-    
+    $totalPages = 1;
+
     if($tab == 'main') {
         $result = $dao->getMainItems($page);
+        $totalPages = $dao->getTotalMainPages();
+
     } else if ($tab == 'trash') {
         $result = $dao->getTrashItems($page);
+        $totalPages = $dao->getTotalTrashPages();
     } else {
         echo "unknown database name" ;
         exit(1);
@@ -31,7 +35,7 @@
     $gparams->pageNumber = $page;
 
     $gparams->cards = $result;
-    $gparams->numberOfPages = $dao->getNumberOfPages();
+    $gparams->totalPages = $totalPages;
 
 
 ?>
@@ -146,21 +150,19 @@
 
         <div class="row">
             <div class="col-sm-4" id="navigation">
-                <a href="#" v-on:click="gotoPreviousPage($event)">&nbsp;previous</a>
-                &nbsp;
-                <a href="#" v-on:click="gotoNextPage($event)">next&nbsp;</a>
-                &nbsp;
-                <input v-model="box.jump"/> &#47; {{page.total}}
-                <a href="#" v-on:click="gotoPage($event)"> jump</a>
+                &nbsp;<a href="#" v-on:click="gotoPreviousPage($event)">[previous]</a>
+                &nbsp;<a href="#" v-on:click="gotoNextPage($event)">[next]</a>
+                &nbsp;<input v-model="box.jump"/> &#47; {{page.total}}
+                &nbsp;<a href="#" v-on:click="gotoPage($event)">[jump]</a>
             </div>
 
-            <div class="col-sm-4 text-center">
+            <div class="col-sm-4 text-center" v-show="display.tab == 'main' ">
                 <span>Trash &nbsp; {{trash.length}}</span>
             </div>
 
-            <div class="col-sm-4">
-                <a href="#" class="doc">download</a>&nbsp;|&nbsp;
-                <a href="#" v-on:click="submit($event)">submit</a>
+            <div class="col-sm-4" v-show="display.tab == 'main' ">
+                <a href="/app/download.php" class="doc">[download]</a>&nbsp;
+                <a href="#" v-on:click="submit($event)">[submit]</a>
             </div>
 
         </div>
@@ -188,7 +190,7 @@
                 page : {
                     "number": gparams.pageNumber,
                     "message": "...",
-                    "total": gparams.numberOfPages
+                    "total": gparams.totalPages
                 },
                 display: {
                     "tab": gparams.tab 
@@ -212,7 +214,7 @@
 
                 pageNum = (pageNum < 0) ? 0: pageNum;
                 console.log("jump to page ->  %O", pageNum);
-                window.location.href = gparams.base + "/index.php?page=" + pageNum;
+                window.location.href = gparams.base + "/index.php?page=" + pageNum + "&tab=" + this.display.tab;
 
             },
 
@@ -227,7 +229,7 @@
 
                 pageNum = (pageNum > this.page.total) ? this.page.total : pageNum;
                 console.log("jump to page ->  %O", pageNum);
-                window.location.href = gparams.base + "/index.php?page=" + pageNum;
+                window.location.href = gparams.base + "/index.php?page=" + pageNum + "&tab=" + this.display.tab;;
 
             },
             gotoPage(event) {
@@ -238,7 +240,7 @@
                 }
 
                 console.log("jump to page ->  %O", pageNum);
-                window.location.href = gparams.base + "/index.php?page=" + pageNum;
+                window.location.href = gparams.base + "/index.php?page=" + pageNum + "&tab=" + this.display.tab;;
 
             },
 

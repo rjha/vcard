@@ -73,6 +73,18 @@ namespace com\yuktix\dao {
             
         }
 
+        function getAllMainItems() {
+
+            $start = $page * $this->page_size;
+            $sql = "select name, email from card_master order by email asc " ;
+            
+            $stmt = $this->dbh->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $result;
+
+        }
+
         function getMainItems($page) {
 
             $start = $page * $this->page_size;
@@ -101,9 +113,22 @@ namespace com\yuktix\dao {
 
         }
 
-        function getNumberOfPages() {
+        function getTotalMainPages() {
 
             $sql = "select count(id) as total from card_master" ;
+            $stmt = $this->dbh->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $total = intval($result["total"]);
+            
+            $num_pages = ceil($total / $this->page_size);
+            return $num_pages;
+
+        }
+
+        function getTotalTrashPages() {
+
+            $sql = "select count(id) as total from card_trash" ;
             $stmt = $this->dbh->prepare($sql);
             $stmt->execute();
             $result = $stmt->fetch(\PDO::FETCH_ASSOC);
