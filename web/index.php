@@ -32,61 +32,42 @@
     
     <style>
 
-        .text-center {
-            text-align: center;
+        header {
+            height: 6.5000rem;
+            border-bottom: transparent ;
+            margin-bottom: 21px;
+
+        }
+
+        header input {
+            height: 31px;   
+        }
+
+        #page-message {
+            height:41px; 
+            background: beige; 
+            border-top: 1px solid #ccc;
         }
 
         .align-right {
             float: right;
         }
 
-        #message {
-            margin-bottom: 30px;
-            padding: 10px;
-            background: azure;
+        #navigation input {
+            width: 71px;
+            height: 31px;
         }
 
-        .pagination-input {
-            width: 71px;
-        }
-        
         .strike {
             background-color: bisque;
         }
 
-        div.sticky-element {
-            position: -webkit-sticky;
-            position: sticky;
-            z-index: 1000;
-        }
-        .mb-20 {
-            margin-bottom: 20px;
-        }
-
-        .mt-25 {
-            margin-top: 25px;
-        }
-
-        .top-height-56 {
-            top: 56px;
-        }
-
-        .top-height-100 {
-            top: 100px;
-        }
-
         .tabnav a {
             border-bottom: 3px solid transparent;
+            padding: 11px; 
         }
 
-        .tabnav a:hover {
-            border-bottom: 3px solid #1976d2;
-        }
-
-        .tabnav a.active {
-            border-bottom: 3px solid #1976d2;
-        }
-
+      
 
     </style>
 
@@ -96,29 +77,36 @@
 
 
 <div class="container" id="container">
-    <header class="sticky text-center">
-        <h1> visiting cards database </h1>
-    </header>
-    <div class="sticky-element top-height-56" id="message">
+    <header class="sticky">
         <div class="row">
-            <span v-show="pageMessage" v-text="pageMessage">&nbsp;</span>
-            <span v-show="!pageMessage">&nbsp;</span>
-        </div>
-    </div>
-    <div class="row sticky-element top-height-100 mb-20" style="border-bottom: .0625rem solid var(--header-border-color);">
-        <div class="col-md-8">
-            <header class="tabnav" style="border-bottom:0px;">
-                <a href="#"  v-on:click="switchTabs('masterTab')" v-bind:class="{ active: masterTab }" class="button">Master</a>
-                <a href="#" v-on:click="switchTabs('trashTab')" v-bind:class="{ active: trashTab }" class="button">Trash</a>
-            </header>
-        </div>
-        <div class="col-md-4" style="background: var(--header-back-color);">
-            <div class="input-group align-right">
-                <input type="text" id="search"/>
-                <button class="small primary">Search</button>
+            <div class="col-md-4">
+                <span> Visiting cards database </span>
+            </div>
+
+            <div class="col-md-4">
+                <div class="tabnav">
+                    <a href="#"  v-on:click="switchTabs('masterTab')" v-bind:class="{ active: masterTab }" >master</a>
+                    <a href="#" v-on:click="switchTabs('trashTab')" v-bind:class="{ active: trashTab }">trash</a>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="input-group align-right">
+                    <input type="text" id="search"/>
+                    <button class="small primary">Search</button>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="row">
+            <div id="page-message" class="col-md-12">
+                <span v-show="pageMessage" v-text="pageMessage">&nbsp;</span>
+                ...&nbsp;
+            </div>
+
+        </div>
+    </header>
+
+
     <div class="row">
         <div class="col-md-12" v-show="masterTab">
             <div class="text-center" v-show="cards.length == 0">
@@ -152,29 +140,24 @@
 
         <div class="row">
             <div class="col-sm-4" id="navigation">
-                <p class="doc">
-                    <a href="/index.php?page=<?php echo $previousPage; ?>" class="doc">&lt;&nbsp;previous</a>
-                    &nbsp;
-                    <a href="/index.php?page=<?php echo $nextPage; ?>" class="doc">next&nbsp;&gt;</a>
-                    &nbsp;
-                    <input class="pagination-input" v-model="page"/> &#47; {{numberOfPages}}
-                    <a href="#" v-on:click="gotoPage($event)" class="doc"> jump</a>
-                </p>
+                <a href="/index.php?page=<?php echo $previousPage; ?>">&lt;&nbsp;previous</a>
+                &nbsp;
+                <a href="/index.php?page=<?php echo $nextPage; ?>">next&nbsp;&gt;</a>
+                &nbsp;
+                <input v-model="page"/> &#47; {{numberOfPages}}
+                <a href="#" v-on:click="gotoPage($event)"> jump</a>
             </div>
+
             <div class="col-sm-4 text-center">
-                <p class="doc mt-25">
-                    <span class="doc">Trash &nbsp; {{trash.length}}</span>
-                </p>
+                <span>Trash &nbsp; {{trash.length}}</span>
             </div>
 
             <div class="col-sm-4">
-                <div class="align-right">
-                    <p class="doc mt-25">
-                        <a href="#" class="doc">Cancel</a>
-                        &nbsp;|&nbsp;
-                        <a href="#" v-on:click="submit($event)" class="doc">Submit</a>
-                    </p>
-                </div>
+                <a href="#" class="doc">download</a>
+                &nbsp;|&nbsp;
+                <a href="#" class="doc">cancel</a>
+                &nbsp;|&nbsp;
+                <a href="#" v-on:click="submit($event)">submit</a>
             </div>
 
         </div>
@@ -201,10 +184,7 @@
                 cards: gparams.cards,
                 numberOfPages: gparams.numberOfPages,
                 trash: [],
-                page : 1,
-                masterTab: true,
-                trashTab: false,
-                pageMessage: ""
+                page : 1
             }
         },
 
@@ -292,18 +272,8 @@
                     console.log(error.response);
                 });
 
-            }, //:submitFile
-            switchTabs(tab) {
-                if (tab === 'masterTab') {
-                    this.trashTab = false;
-                    this.masterTab = true;
-                    this.pageMessage = "";
-                } else {
-                    this.trashTab = true;
-                    this.masterTab = false;
-                    this.pageMessage = "";
-                }
             }
+            
         }
     });
 
