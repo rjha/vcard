@@ -18,12 +18,6 @@
 
     $dao = new CardDao();
     $flag = $dao->checkInTrash($email);
-
-	if($flag == 1) {
-		 "found in trash";
-	} else {
-
-	}
 	$responseObj->message = ($flag == 1) ? "found in trash" : "not found in trash" ;
     $responseObj->code = ($flag == 1) ? 200 : 404;
 	echo json_encode($responseObj);
