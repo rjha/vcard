@@ -85,6 +85,23 @@
         .tabnav a.active {
             border-bottom: 3px solid #1976D2;
         }
+
+        .content-section-height {
+            min-height: 100vh;
+        }
+
+        .search-button {
+            height: auto;
+            line-height: 1;
+            margin: 20px 0 20px 0;
+            background-color: #1976D2;
+            color: white;
+        }
+
+        .search-button:hover, .search-button:focus {
+            background-color: #3d88d2;
+            color: white;
+        }
       
 
     </style>
@@ -110,8 +127,8 @@
             
             <div class="col-md-4">
                 <div class="input-group align-right">
-                    <input type="text" id="search"  v-model="box.token" />
-                    <button class="small primary" v-on:click="search($event)">Search</button>
+                    <input type="text" id="search"  v-on:keyup.enter="search($event)" v-model="box.token" />
+                    <button class="search-button " v-on:click="search($event)">Search</button>
                 </div>
             </div>
         </div>
@@ -124,27 +141,29 @@
     </header>
 
 
-   
-    <div id="cards" v-show="display.tab == 'main' ">
-        <div class="row" v-for="card in cards" v-bind:class="{strike: card.trash}">
-            <div class="col-sm-4"> {{card.name}} </div>
-            <div class="col-sm-4"> {{card.email}} </div>
-            <div class="col-sm-4">
-                <span v-if="!card.trash"><a href="#" v-on:click="trashCard($event, card)">Trash</a> </span>
-                <span v-if="card.trash"><a href="#" v-on:click="restoreCard($event, card)">Restore</a> </span>
+    <div class="content-section-height">
+        <div id="cards" v-show="display.tab == 'main' ">
+            <div class="row" v-for="card in cards" v-bind:class="{strike: card.trash}">
+                <div class="col-sm-4"> {{card.name}} </div>
+                <div class="col-sm-4"> {{card.email}} </div>
+                <div class="col-sm-4">
+                    <span v-if="!card.trash"><a href="#" v-on:click="trashCard($event, card)">Trash</a> </span>
+                    <span v-if="card.trash"><a href="#" v-on:click="restoreCard($event, card)">Restore</a> </span>
+                </div>
             </div>
-        </div>
-    </div> <!-- main -->
+        </div> <!-- main -->
 
-    <div v-show="display.tab == 'trash' ">
+        <div v-show="display.tab == 'trash' ">
 
-        <div class="row" v-for="card in cards">
-            <div class="col-sm-4"> {{card.name}} </div>
-            <div class="col-sm-4"> {{card.email}} </div>
-            <div class="col-sm-4"> &nbsp;</div>
-        </div>
-       
-    </div>  <!-- trash -->
+            <div class="row" v-for="card in cards">
+                <div class="col-sm-4"> {{card.name}} </div>
+                <div class="col-sm-4"> {{card.email}} </div>
+                <div class="col-sm-4"> &nbsp;</div>
+            </div>
+
+        </div>  <!-- trash -->
+    </div>
+
 
     <footer class="sticky">
 
@@ -152,7 +171,7 @@
             <div class="col-sm-4" id="navigation">
                 &nbsp;<a href="#" v-on:click="gotoPreviousPage($event)">[previous]</a>
                 &nbsp;<a href="#" v-on:click="gotoNextPage($event)">[next]</a>
-                &nbsp;<input v-model="box.jump"/> &#47; {{page.total}}
+                &nbsp;<input v-on:keyup.enter="gotoPage($event)" v-model="box.jump"/> &#47; {{page.total}}
                 &nbsp;<a href="#" v-on:click="gotoPage($event)">[jump]</a>
             </div>
 
