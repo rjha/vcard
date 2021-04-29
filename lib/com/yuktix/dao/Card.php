@@ -196,6 +196,65 @@ namespace com\yuktix\dao {
 
         }
 
+        function searchInMainTable($token) {
+
+            $sql = "select id from card_master " 
+			." where match(name, email, phone) against ('%s' IN BOOLEAN MODE) "
+			." order by id DESC limit 20 " ;
+
+            $sql1 = sprintf($sql, $token);
+            $stmt1 = $this->dbh->prepare($sql1);
+            $stmt1->execute();
+
+            $documents = array();
+            $rows = $stmt1->fetchAll(\PDO::FETCH_ASSOC);
+            foreach($rows as $row) {
+                array_push($documents, $row["id"]);
+            }
+            
+            if(empty($documents)) {
+                return array();
+            }
+
+            $sub_query = implode(",", $documents);
+            $sql2 = sprintf("select name, email from card_master where id in (%s) ", $sub_query);
+            $stmt2 = $this->dbh->prepare($sql2);
+            $stmt2->execute();
+            $rows = $stmt2->fetchAll(\PDO::FETCH_ASSOC);
+
+            return $rows;
+
+        }
+
+        function searchInTrashTable($token) {
+
+            $sql = "select id from card_trash " 
+			." where match(name, email) against ('%s' IN BOOLEAN MODE) "
+			." order by id DESC limit 20 " ;
+
+            $sql1 = sprintf($sql, $token);
+            $stmt1 = $this->dbh->prepare($sql1);
+            $stmt1->execute();
+
+            $documents = array();
+            $rows = $stmt1->fetchAll(\PDO::FETCH_ASSOC);
+            foreach($rows as $row) {
+                array_push($documents, $row["id"]);
+            }
+            
+            if(empty($documents)) {
+                return array();
+            }
+
+            $sub_query = implode(",", $documents);
+            $sql2 = sprintf("select name, email from card_trash where id in (%s) ", $sub_query);
+            $stmt2 = $this->dbh->prepare($sql2);
+            $stmt2->execute();
+            $rows = $stmt2->fetchAll(\PDO::FETCH_ASSOC);
+
+            return $rows;
+
+        }
     }
 }
 

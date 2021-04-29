@@ -110,8 +110,8 @@
             
             <div class="col-md-4">
                 <div class="input-group align-right">
-                    <input type="text" id="search"/>
-                    <button class="small primary">Search</button>
+                    <input type="text" id="search"  v-model="box.token" />
+                    <button class="small primary" v-on:click="search($event)">Search</button>
                 </div>
             </div>
         </div>
@@ -196,7 +196,8 @@
                     "tab": gparams.tab 
                 },
                 box: {
-                    "jump": gparams.pageNumber
+                    "jump": gparams.pageNumber,
+                    "token": null  
                 }
             }
         },
@@ -304,8 +305,8 @@
 
                 axios.post(url, data, config).then( response => {
 
-                    var status = response.status || 500 ;
-                    var data = response.data || {};
+                    let status = response.status || 500 ;
+                    let data = response.data || {};
                     this.page.message = data.message || data.error ;
                     console.log("server response: %O", data);
 
@@ -317,8 +318,55 @@
 
                     this.page.message = "unknown error happened" ;
                     console.log("page submit() error");
-                    console.log(error.response.data);
                     console.log(error.response);
+
+                });
+
+            },
+
+            search(event) {
+                
+                console.log("search token -> %s", this.box.token);
+                
+                // let shims = new Map();
+                // shims.set("main", "/app/shim/search/main.php");
+                // shims.set("trash", "/app/shim/search/trash.php")
+                // let url = gparams.base + shims.get(this.display.tab);
+
+                let url = gparams.base + "/app/shim/search/main.php"
+
+                let data = {
+                    "token": this.box.token,
+                    "tab": this.display.tab
+                }
+
+                let config = {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+
+                axios.post(url, data, config).then( response => {
+
+                    let i = 0;
+                    let status = response.status || 500 ;
+                    let data = response.data || {};
+                    this.page.message = data.message || data.error;
+
+                    console.log("server response: %O", data);
+                    if((data.code == 200) && data.rows && (data.rows.length > 0)) {
+                        this.cards = data.rows;
+                    } else {
+                        this.page.message = "search returned no result, [error: " + this.page.message + "]";
+                    }
+
+                    console.log("page search() completed");
+
+                }).catch( error => {
+
+                    this.page.message = "unknown error happened" ;
+                    console.log("page search() error");
+                    console.log(error);
 
                 });
 

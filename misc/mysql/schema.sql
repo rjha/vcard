@@ -28,3 +28,14 @@ alter table card_trash add constraint uniq_email unique(email);
 alter table card_master add column country_code int;
 alter table card_master add column phone varchar(16);
 alter table card_master add column source varchar(16);
+
+
+alter table card_trash add column name varchar(64);
+
+-- 
+-- 29 APR 2021 
+-- 
+
+
+alter table card_master add fulltext index fts_card1(name, email, phone);
+alter table card_trash add fulltext index fts_card2(name, email);
