@@ -33,7 +33,7 @@
     $gparams->base = Url::base();
     $gparams->tab = $tab;
     $gparams->pageNumber = $page;
-
+    $gparams->currentUrl = Url::current();
     $gparams->cards = $result;
     $gparams->totalPages = $totalPages;
 
@@ -156,13 +156,14 @@
                 &nbsp;<a href="#" v-on:click="gotoPage($event)">[jump]</a>
             </div>
 
-            <div class="col-sm-4 text-center" v-show="display.tab == 'main' ">
-                <span>Trash &nbsp; {{trash.length}}</span>
-            </div>
-
             <div class="col-sm-4" v-show="display.tab == 'main' ">
                 <a href="/app/download.php" class="doc">[download]</a>&nbsp;
-                <a href="#" v-on:click="submit($event)">[submit]</a>
+              
+            </div>
+
+            <div class="col-sm-4 text-center" v-show="display.tab == 'main' ">
+                <span>Trash &nbsp; {{trash.length}}</span>
+                &nbsp;<a href="#" v-on:click="submit($event)">[delete]</a>
             </div>
 
         </div>
@@ -230,7 +231,7 @@
 
                 pageNum = (pageNum > this.page.total) ? this.page.total : pageNum;
                 console.log("jump to page ->  %O", pageNum);
-                window.location.href = gparams.base + "/index.php?page=" + pageNum + "&tab=" + this.display.tab;;
+                window.location.href = gparams.base + "/index.php?page=" + pageNum + "&tab=" + this.display.tab;
 
             },
             gotoPage(event) {
@@ -241,7 +242,7 @@
                 }
 
                 console.log("jump to page ->  %O", pageNum);
-                window.location.href = gparams.base + "/index.php?page=" + pageNum + "&tab=" + this.display.tab;;
+                window.location.href = gparams.base + "/index.php?page=" + pageNum + "&tab=" + this.display.tab;
 
             },
 
@@ -313,6 +314,7 @@
                     // data.error 
                     // data.code 
                     console.log("page submit() completed");
+                    window.location.href = gparams.base + gparams.currentUrl;
 
                 }).catch( error => {
 
@@ -357,7 +359,10 @@
                     if((data.code == 200) && data.rows && (data.rows.length > 0)) {
                         this.cards = data.rows;
                     } else {
-                        this.page.message = "search returned no result, [error: " + this.page.message + "]";
+                        this.page.message = "search returned no result" ;
+                        if(data.error) {
+                            this.page.message =  this.page.message + " error:" + data.error;
+                        } 
                     }
 
                     console.log("page search() completed");
