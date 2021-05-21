@@ -127,12 +127,11 @@
    
     <div id="cards" v-show="display.tab == 'main' ">
         <div class="row" v-for="card in cards" v-bind:class="{strike: card.trash}">
+            <div class="col-sm-1">
+                <input type="checkbox"  v-model="card.trash"  v-bind:id="card.email" v-on:change="toggleTrashCard($event, card)">
+            </div>
             <div class="col-sm-4"> {{card.name}} </div>
             <div class="col-sm-4"> {{card.email}} </div>
-            <div class="col-sm-4">
-                <span v-if="!card.trash"><a href="#" v-on:click="trashCard($event, card)">Trash</a> </span>
-                <span v-if="card.trash"><a href="#" v-on:click="restoreCard($event, card)">Restore</a> </span>
-            </div>
         </div>
     </div> <!-- main -->
 
@@ -374,6 +373,15 @@
                     console.log(error);
 
                 });
+
+            },
+            toggleTrashCard(event, card) {
+
+                if(card.trash) {
+                    this.trashCard(event, card);
+                } else {
+                    this.restoreCard(event, card);
+                }
 
             }
 
